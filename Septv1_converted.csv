@@ -1,0 +1,24 @@
+employee_id,Pay_Date,Pay_Period,Name,Department,basic_salary,allowances,Overtime,Holiday,Total_Earnings,Social_Security_System,PhilHealth,Pag_ibig,Withholding_Tax,Loans,Unpaid_Absences_Tardiness,Others_Authorized_Deductions,Total_Deductions,Net_Pay
+EMP003,"September 16","September 1-15 2025","Trystan Dave Odevilas","Client Support",10000.00,50,0,270.33,10320.33,500,100,250,0,0,0,0,850,9470.33
+EMP004,"September 16","September 1-15 2025","Ion Ivoh Aironne Odevilas","Products Pricing Templating",10000.00,300,0,270.33,10570.33,500,100,250,0,0,0,0,850,9720.33
+EMP010,"September 16","September 1-15 2025","Yuan Angelo Babagay",Templating,10000.00,50,0,270.33,10320.33,500,100,250,0,0,0,0,850,9470.33
+EMP008,"September 16","September 1-15 2025","Joms Maru",Devs,10000.00,300,0,270.33,10570.33,500,100,250,0,0,0,0,850,9720.33
+EMP005,"September 16","September 1-15 2025","Greek Amodia",Devs,10000.00,500,0,270.33,10770.33,500,100,250,0,0,0,0,850,9920.33
+EMP007,"September 16","September 1-15 2025","Jay Englis","Quality Assurance",10000.00,300,0,270.33,10570.33,500,100,250,0,0,0,0,850,9720.33
+EMP009,"September 16","September 1-15 2025","Enrique Guevarra",Devs,10000.00,400,0,270.33,10670.33,500,100,250,0,0,0,0,850,9820.33
+EMP015,"September 16","September 1-15 2025","Lee Campogan",Devs,10000.00,500,0,270.33,10770.33,500,100,250,0,0,0,0,850,9920.33
+EMP017,"September 16","September 1-15 2025","Richard Felicilda",Devs,10000.00,400,0,270.33,10670.33,500,100,250,0,0,0,0,850,9820.33
+EMP019,"September 16","September 1-15 2025","William Sheen Lim",Devs,10000.00,250,0,270.33,10520.33,500,100,250,0,0,0,0,850,9670.33
+EMP020,"September 16","September 1-15 2025","Sean Jim",Devs,10000.00,500,0,270.33,10770.33,500,100,250,0,0,0,0,850,9920.33
+EMP025,"September 16","September 1-15 2025","Vans Embodo","Client Support",10000.00,550,0,270.33,10820.33,500,100,250,0,0,0,0,850,9970.33
+EMP012,"September 16","September 1-15 2025","Ivy Bugtai","Print Media",10000.00,500,0,270.33,10770.33,500,100,250,0,0,0,0,850,9920.33
+EMP011,"September 16","September 1-15 2025","Dale Bacus","Client Support",10000.00,550,0,270.33,10820.33,500,100,250,0,0,0,0,850,9970.33
+EMP024,"September 16","September 1-15 2025","Von Lauron","Client Support",10000.00,550,0,270.33,10820.33,500,100,250,0,0,0,0,850,9970.33
+EMP018,"September 16","September 1-15 2025","Danica Rana","Print Media",10000.00,200,0,270.33,10470.33,500,100,250,0,0,0,0,850,9620.33
+EMP006,"September 16","September 1-15 2025","Carlo Marturillas",Templating,10000.00,350,0,270.33,10620.33,500,100,250,0,0,0,0,850,9770.33
+EMP013,"September 16","September 1-15 2025","Lyndel Alota",Templating,10000.00,500,0,270.33,10770.33,500,100,250,0,0,0,2959.00,3809.00,6961.33
+EMP014,"September 16","September 1-15 2025","Cloud Villaver",Templating,10000.00,350,0,270.33,10620.33,500,100,250,0,0,0,0,850,9770.33
+EMP016,"September 16","September 1-15 2025","Victoria Cansancio",Templating,10000.00,450,0,270.33,10720.33,500,100,250,0,0,0,0,850,9870.33
+EMP021,"September 16","September 1-15 2025","Paul John Lusares",Devs,10000.00,550,0,270.33,10820.33,500,100,250,0,0,0,0,850,9970.33
+EMP023,"September 16","September 1-15 2025","Marnien Cueba",Devs,10000.00,450,0,270.33,10720.33,500,100,250,0,0,0,0,850,9870.33
+EMP030,"September 16","September 1-15 2025","Nino Anthony Bandalan",Devs,10000.00,550,0,270.33,10820.33,500,100,250,0,0,0,0,850,9970.33

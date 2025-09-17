@@ -9,7 +9,7 @@ use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 
-class PayrollImport implements ToModel, WithHeadingRow, WithValidation
+class PayrollImport implements ToModel, WithHeadingRow
 {
     /**
      * @param array $row
@@ -18,46 +18,96 @@ class PayrollImport implements ToModel, WithHeadingRow, WithValidation
      */
     public function model(array $row)
     {
+        // Map column names to handle different Excel formats
+        $employeeId = $row['employee_id'] ?? $row['Employee_ID'] ?? null;
+        $name = $row['name'] ?? $row['Name'] ?? null;
+        $department = $row['department'] ?? $row['Department'] ?? null;
+        $period = $row['period'] ?? $row['Pay_Period'] ?? $row['pay_period'] ?? null;
+        $payDate = $row['pay_date'] ?? $row['Pay_Date'] ?? $row['Pay_Date'] ?? null;
+
         // Skip empty rows
-        if (empty($row['employee_id']) && empty($row['name']) && empty($row['department'])) {
+        if (empty($employeeId) && empty($name) && empty($department)) {
             return null;
         }
 
         // Find or create employee
         $employee = Employee::firstOrCreate(
-            ['employee_id' => $row['employee_id']],
+            ['employee_id' => $employeeId],
             [
-                'name' => $row['name'],
-                'department' => $row['department'],
-                'email' => $row['email'] ?? null,
-                'position' => $row['position'] ?? null,
+                'name' => $name,
+                'department' => $department,
+                'email' => $row['email'] ?? $row['Email'] ?? null,
+                'position' => $row['position'] ?? $row['Position'] ?? null,
                 'hire_date' => isset($row['hire_date']) && !empty($row['hire_date']) ? $this->parseDate($row['hire_date']) : null,
             ]
         );
 
-        // Calculate net pay
-        $basicSalary = (float) $row['basic_salary'];
-        $allowances = (float) ($row['allowances'] ?? 0);
-        $overtime = (float) ($row['overtime'] ?? 0);
-        $bonus = (float) ($row['bonus'] ?? 0);
-        $deductions = (float) ($row['deductions'] ?? 0);
-        $tax = (float) ($row['tax'] ?? 0);
+        // Calculate net pay - handle different column names including new underscore format
+        // Also clean comma-formatted numbers
+        $basicSalary = (float) $this->cleanNumber($row['basic_salary'] ?? $row['Basic_Salary'] ?? 0);
+        $allowances = (float) $this->cleanNumber($row['allowances'] ?? $row['Allowances'] ?? 0);
+        $overtime = (float) $this->cleanNumber($row['overtime'] ?? $row[' Overtime '] ?? $row['Overtime'] ?? 0);
+        $bonus = (float) $this->cleanNumber($row['holiday'] ?? $row['Holiday'] ?? $row['bonus'] ?? $row['Bonus'] ?? $row['Holiday Premium'] ?? $row[' Holiday '] ?? 0);
 
-        $netPay = $basicSalary + $allowances + $overtime + $bonus - $deductions - $tax;
+        // Handle different deduction column names - updated to match CSV exactly (with lowercase from WithHeadingRow)
+        $socialSecurity = (float) $this->cleanNumber($row['social_security_system'] ?? $row['Social_Security_System'] ?? $row['Social Security System'] ?? 0);
+        $philHealth = (float) $this->cleanNumber($row['philhealth'] ?? $row['PhilHealth'] ?? 0);
+        $pagIbig = (float) $this->cleanNumber($row['pag_ibig'] ?? $row['Pag_ibig'] ?? $row['Pag-ibig'] ?? 0);
+        $tax = (float) $this->cleanNumber($row['withholding_tax'] ?? $row['Withholding_Tax'] ?? $row['Withholding Tax'] ?? $row['tax'] ?? 0);
+        $loans = (float) $this->cleanNumber($row['loans'] ?? $row['Loans'] ?? 0);
+        $otherDeductions = (float) $this->cleanNumber($row['others_authorized_deductions'] ?? $row['Others_Authorized_Deductions'] ?? $row['Others Authorized Deductions'] ?? 0);
+
+        // Calculate total deductions
+        $totalDeductions = $socialSecurity + $philHealth + $pagIbig + $tax + $loans + $otherDeductions;
+        $deductions = (float) $this->cleanNumber($row['total_deductions'] ?? $row['Total_Deductions'] ?? $row['Total Deductions'] ?? $row['deductions'] ?? $totalDeductions);
+
+        // If we don't have a total deductions column value, use our calculated total
+        if ($deductions == 0 && $totalDeductions > 0) {
+            $deductions = $totalDeductions;
+        }
+
+        // If we have a calculated net pay, use it; otherwise calculate it
+        $netPay = $this->cleanNumber($row[' Net_Pay '] ?? $row['Net_Pay'] ?? $row['Net Pay'] ?? ($basicSalary + $allowances + $overtime + $bonus - $deductions));
 
         return new Payroll([
             'employee_id' => $employee->id,
-            'period' => $row['period'],
+            'period' => $period,
             'basic_salary' => $basicSalary,
             'allowances' => $allowances,
             'overtime' => $overtime,
             'bonus' => $bonus,
             'deductions' => $deductions,
             'tax' => $tax,
-            'net_pay' => $netPay,
-            'pay_date' => $this->parseDate($row['pay_date']),
+            'net_pay' => (float) $netPay,
+            'pay_date' => $this->parseDate($payDate),
             'status' => 'pending',
+            // New detailed fields from CSV
+            'total_earnings' => (float) $this->cleanNumber($row['total_earnings'] ?? $row['Total_Earnings'] ?? $row['Total Earnings'] ?? 0),
+            'social_security_system' => $socialSecurity,
+            'philhealth' => $philHealth,
+            'pag_ibig' => $pagIbig,
+            'withholding_tax' => $tax,
+            'loans' => $loans,
+            'unpaid_absences_tardiness' => (float) $this->cleanNumber($row['unpaid_absences_tardiness'] ?? $row['Unpaid_Absences_Tardiness'] ?? $row['Unpaid Absences, Tardiness'] ?? 0),
+            'others_authorized_deductions' => $otherDeductions,
+            'total_deductions' => $deductions, // Use the calculated total deductions
         ]);
+    }
+
+    /**
+     * Clean number formatting (remove commas, quotes, etc.)
+     */
+    private function cleanNumber($value)
+    {
+        if (empty($value)) {
+            return 0;
+        }
+
+        // Convert to string and remove commas, quotes, and extra spaces
+        $cleaned = str_replace([',', '"', "'", ' '], '', (string) $value);
+
+        // Return as float, defaulting to 0 if not numeric
+        return is_numeric($cleaned) ? (float) $cleaned : 0;
     }
 
     /**
@@ -115,18 +165,22 @@ class PayrollImport implements ToModel, WithHeadingRow, WithValidation
     {
         return [
             'employee_id' => 'required|string',
-            'name' => 'required|string',
-            'department' => 'required|string',
-            'period' => 'required|string',
+            'Name' => 'required|string',
+            'Department' => 'required|string',
+            'Pay_Period' => 'required|string',
             'basic_salary' => 'required|numeric|min:0',
-            'pay_date' => 'required',
+            'Pay_Date' => 'required',
         ];
     }
 
     public function prepareForValidation($data, $index)
     {
-        // Skip validation for empty rows
-        if (empty($data['employee_id']) && empty($data['name']) && empty($data['department'])) {
+        // Skip validation for empty rows - check multiple possible column names
+        $employeeId = $data['employee_id'] ?? $data['Employee_ID'] ?? null;
+        $name = $data['name'] ?? $data['Name'] ?? null;
+        $department = $data['department'] ?? $data['Department'] ?? null;
+
+        if (empty($employeeId) && empty($name) && empty($department)) {
             return [];
         }
 

@@ -144,6 +144,16 @@
             color: white;
         }
 
+        .btn-preview {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .btn-preview:hover {
+            background-color: #138496;
+            color: white;
+        }
+
         .batch-actions {
             background: white;
             border-radius: 10px;
@@ -280,6 +290,9 @@
                             </td>
                             <td>{{ $payroll->pay_date->format('M d, Y') }}</td>
                             <td>
+                                <a href="{{ route('payslips.preview', $payroll) }}" class="btn-action btn-preview me-2" target="_blank">
+                                    <i class="fas fa-eye"></i> Preview
+                                </a>
                                 @if($payroll->status === 'generated')
                                 <a href="{{ route('payslips.download', $payroll) }}" class="btn-action btn-download">
                                     <i class="fas fa-download"></i> Download

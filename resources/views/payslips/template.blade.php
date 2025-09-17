@@ -26,6 +26,38 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 30px;
+            overflow: hidden;
+        }
+
+        .header-left {
+            float: left;
+            width: 50%;
+        }
+
+        .header-right {
+            float: right;
+            width: 50%;
+            text-align: center;
+        }
+
+        .company-logo {
+            margin-bottom: 10px;
+        }
+
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            border: 1px solid #ddd;
+        }
+
+        .logo-icon img {
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+        }
+
+        .header-content {
             text-align: center;
         }
 
@@ -161,14 +193,46 @@
             color: #1976d2;
             font-size: 20px;
         }
+
+        /* DomPDF specific optimizations */
+        @media print {
+            body {
+                margin: 0;
+                padding: 10px;
+            }
+
+            .payslip-container {
+                max-width: none;
+                margin: 0;
+            }
+
+            .header {
+                page-break-inside: avoid;
+            }
+        }
     </style>
 </head>
 
 <body>
     <div class="payslip-container">
         <div class="header">
-            <h1>PAYSLIP</h1>
-            <p>Salary Statement</p>
+            <div class="header-left">
+                <div class="company-logo">
+                    <div class="logo-icon">
+                        @if(file_exists(public_path('OutWorx.jpg')))
+                        <img src="{{ asset('OutWorx.jpg') }}" alt="OutWorx Logo">
+                        @else
+                        <div style="width: 100%; height: 100%; background: #ff6b35; border-radius: 12px; text-align: center; line-height: 80px; color: white; font-weight: bold; font-size: 12px;">OW</div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="header-content">
+                    <h1>PAYSLIP</h1>
+                    <p>Salary Statement</p>
+                </div>
+            </div>
         </div>
 
         <div class="content">
@@ -241,7 +305,7 @@
                         @endif
                         @if($payroll->bonus > 0)
                         <tr>
-                            <td>Bonus</td>
+                            <td>Holiday Pay</td>
                             <td class="amount positive">${{ number_format($payroll->bonus, 2) }}</td>
                         </tr>
                         @endif

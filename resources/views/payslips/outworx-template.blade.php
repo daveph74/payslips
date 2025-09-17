@@ -23,54 +23,53 @@
         /* Header Section */
         .header {
             margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .header-left {
+            float: left;
+            width: 50%;
+        }
+
+        .header-right {
+            float: right;
+            width: 50%;
+            text-align: right;
+            padding-top: 10px;
         }
 
         .company-logo {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(45deg, #ff6b35, #000);
-            border-radius: 8px;
-            margin-right: 15px;
-            position: relative;
-        }
-
-        .logo-icon::before {
-            content: '';
-            position: absolute;
-            top: 8px;
-            left: 8px;
-            right: 8px;
-            bottom: 8px;
-            border: 2px solid white;
-            border-radius: 4px;
-        }
-
-        .company-name {
-            font-size: 24px;
-            font-weight: bold;
-            color: black;
+        .logo-icon img {
+            height: 60px;
         }
 
         .payslip-title {
             font-size: 36px;
             font-weight: bold;
             color: black;
-            margin: 20px 0;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        /* Top bar holding employee details on the left and title on the right */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+            margin-bottom: 20px;
         }
 
         /* Employee Information */
         .employee-details {
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
         .employee-details div {
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             font-size: 14px;
         }
 
@@ -83,7 +82,7 @@
             font-size: 18px;
             font-weight: bold;
             color: black;
-            margin: 25px 0 15px 0;
+            margin: 15px 0 7px 0;
         }
 
         /* Tables */
@@ -96,7 +95,7 @@
         .payslip-table th,
         .payslip-table td {
             border: 1px solid black;
-            padding: 12px;
+            padding: 10px;
             text-align: left;
             font-size: 14px;
         }
@@ -119,13 +118,13 @@
         .earnings-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 25px;
+            margin-bottom: 15px;
         }
 
         .earnings-table th,
         .earnings-table td {
             border: 1px solid black;
-            padding: 12px;
+            padding: 10px;
             text-align: left;
             font-size: 14px;
         }
@@ -148,7 +147,7 @@
         .deductions-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 25px;
+            margin-bottom: 15px;
         }
 
         .deductions-table th,
@@ -212,21 +211,38 @@
         .empty-value {
             color: #ccc;
         }
+
+        /* DomPDF specific optimizations */
+        @media print {
+            body {
+                margin: 0;
+                padding: 10px;
+            }
+
+            .payslip-container {
+                max-width: none;
+                margin: 0;
+            }
+
+            .header {
+                page-break-inside: avoid;
+            }
+
+            .earnings-table,
+            .deductions-table,
+            .take-home-table {
+                page-break-inside: avoid;
+            }
+        }
     </style>
 </head>
 
 <body>
     <div class="payslip-container">
-        <!-- Header Section -->
-        <div class="header">
-            <div class="company-logo">
-                <div class="logo-icon"></div>
-                <div class="company-name">OutWorx</div>
-            </div>
-            <div class="payslip-title">PAYSLIP</div>
-        </div>
+        <!-- Title centered at top -->
+        <div class="payslip-title" style="margin-top:0">OutWorx PAYSLIP</div>
 
-        <!-- Employee Information -->
+        <!-- Employee Information below title -->
         <div class="employee-details">
             <div><strong>Employee Name:</strong> {{ $payroll->employee->name }}</div>
             <div><strong>Employee ID:</strong> {{ $payroll->employee->employee_id }}</div>
@@ -247,29 +263,29 @@
             <tbody>
                 <tr>
                     <td>Pay period salary</td>
-                    <td class="amount-cell">₱{{ number_format($payroll->basic_salary, 2) }}</td>
+                    <td class="amount-cell">{{ number_format($payroll->basic_salary, 2) }}</td>
                 </tr>
                 @if($payroll->allowances > 0)
                 <tr>
                     <td>Parking/Transpo Allowance</td>
-                    <td class="amount-cell">₱{{ number_format($payroll->allowances, 2) }}</td>
+                    <td class="amount-cell">{{ number_format($payroll->allowances, 2) }}</td>
                 </tr>
                 @endif
                 @if($payroll->overtime > 0)
                 <tr>
-                    <td>Holiday Pay</td>
-                    <td class="amount-cell">₱{{ number_format($payroll->overtime, 2) }}</td>
+                    <td>Overtime Pay</td>
+                    <td class="amount-cell">{{ number_format($payroll->overtime, 2) }}</td>
                 </tr>
                 @endif
                 @if($payroll->bonus > 0)
                 <tr>
-                    <td>Bonus</td>
-                    <td class="amount-cell">₱{{ number_format($payroll->bonus, 2) }}</td>
+                    <td>Holiday Pay</td>
+                    <td class="amount-cell">{{ number_format($payroll->bonus, 2) }}</td>
                 </tr>
                 @endif
                 <tr style="background-color: #f8f9fa; font-weight: bold;">
                     <td>Total Earnings</td>
-                    <td class="amount-cell">₱{{ number_format($payroll->basic_salary + $payroll->allowances + $payroll->overtime + $payroll->bonus, 2) }}</td>
+                    <td class="amount-cell">{{ number_format($payroll->basic_salary + $payroll->allowances + $payroll->overtime + $payroll->bonus, 2) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -287,76 +303,66 @@
                 <tr>
                     <td>Social Security System</td>
                     <td class="amount-cell">
-                        @if($payroll->deductions > 0)
-                        ₱{{ number_format($payroll->deductions * 0.11, 2) }}
+                        @if($payroll->social_security_system > 0)
+                        {{ number_format($payroll->social_security_system, 2) }}
                         @else
-                        <span class="empty-value">₱0.00</span>
+                        <span class="empty-value">0.00</span>
                         @endif
                     </td>
                 </tr>
                 <tr>
                     <td>PhilHealth</td>
                     <td class="amount-cell">
-                        @if($payroll->deductions > 0)
-                        ₱{{ number_format($payroll->deductions * 0.05, 2) }}
+                        @if($payroll->philhealth > 0)
+                        {{ number_format($payroll->philhealth, 2) }}
                         @else
-                        <span class="empty-value">₱0.00</span>
+                        <span class="empty-value">0.00</span>
                         @endif
                     </td>
                 </tr>
                 <tr>
                     <td>Pag-ibig</td>
                     <td class="amount-cell">
-                        @if($payroll->deductions > 0)
-                        ₱{{ number_format($payroll->deductions * 0.02, 2) }}
+                        @if($payroll->pag_ibig > 0)
+                        {{ number_format($payroll->pag_ibig, 2) }}
                         @else
-                        <span class="empty-value">₱0.00</span>
+                        <span class="empty-value">0.00</span>
                         @endif
                     </td>
                 </tr>
                 <tr>
                     <td>Withholding Tax</td>
                     <td class="amount-cell">
-                        @if($payroll->tax > 0)
-                        ₱{{ number_format($payroll->tax, 2) }}
+                        @if($payroll->withholding_tax > 0)
+                        {{ number_format($payroll->withholding_tax, 2) }}
                         @else
-                        <span class="empty-value">₱0.00</span>
-                        @endif
-                    </td>
-                </tr>
-                <tr>
-                    <td>Loans</td>
-                    <td class="amount-cell">
-                        @if($payroll->deductions > 0)
-                        ₱{{ number_format($payroll->deductions * 0.3, 2) }}
-                        @else
-                        <span class="empty-value">₱0.00</span>
+                        <span class="empty-value">0.00</span>
                         @endif
                     </td>
                 </tr>
                 <tr>
                     <td>Unpaid Absences, Tardiness</td>
                     <td class="amount-cell">
-                        @if($payroll->deductions > 0)
-                        ₱{{ number_format($payroll->deductions * 0.2, 2) }}
+                        @if($payroll->unpaid_absences_tardiness > 0)
+                        {{ number_format($payroll->unpaid_absences_tardiness, 2) }}
                         @else
-                        <span class="empty-value">₱0.00</span>
+                        <span class="empty-value">0.00</span>
                         @endif
                     </td>
                 </tr>
                 <tr>
                     <td>Others Authorized Deductions</td>
                     <td class="amount-cell">
-                        @if($payroll->deductions > 0)
-                        ₱{{ number_format($payroll->deductions * 0.32, 2) }}
+                        @if($payroll->others_authorized_deductions > 0)
+                        {{ number_format($payroll->others_authorized_deductions, 2) }}
                         @else
-                        <span class="empty-value">₱0.00</span>
+                        <span class="empty-value">0.00</span>
                         @endif
                     </td>
                 </tr>
                 <tr style="background-color: #f8f9fa; font-weight: bold;">
                     <td>Total Deductions</td>
-                    <td class="amount-cell">₱{{ number_format($payroll->deductions + $payroll->tax, 2) }}</td>
+                    <td class="amount-cell">{{ number_format($payroll->deductions + $payroll->tax, 2) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -373,7 +379,7 @@
             <tbody>
                 <tr style="background-color: #f8f9fa; font-weight: bold;">
                     <td>Take Home Pay for the Period</td>
-                    <td class="amount-cell">₱{{ number_format($payroll->net_pay, 2) }}</td>
+                    <td class="amount-cell">{{ number_format($payroll->net_pay, 2) }}</td>
                 </tr>
             </tbody>
         </table>

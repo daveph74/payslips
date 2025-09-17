@@ -17,7 +17,8 @@ class PayslipController extends Controller
 
     public function generatePayslip(Payroll $payroll)
     {
-        return $this->payslipGenerator->downloadPayslip($payroll);
+        $force = (bool) request()->query('force', false);
+        return $this->payslipGenerator->downloadPayslip($payroll, $force);
     }
 
     public function generateBatch(Request $request)
@@ -35,6 +36,21 @@ class PayslipController extends Controller
 
     public function downloadPayslip(Payroll $payroll)
     {
-        return $this->payslipGenerator->downloadPayslip($payroll);
+        $force = (bool) request()->query('force', false);
+        return $this->payslipGenerator->downloadPayslip($payroll, $force);
+    }
+
+    public function previewPayslip(Payroll $payroll, Request $request)
+    {
+        // Allow template override via query parameter
+        $template = $request->get('template', config('payslip.template', 'outworx-template'));
+
+        // Ensure template exists
+        $templatePath = "payslips.{$template}";
+        if (!view()->exists($templatePath)) {
+            abort(404, "Template '{$template}' not found");
+        }
+
+        return view($templatePath, compact('payroll', 'template'));
     }
 }

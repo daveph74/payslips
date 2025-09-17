@@ -19,6 +19,7 @@ Route::prefix('payroll')->name('payroll.')->group(function () {
 // Payslip Generation Routes
 Route::prefix('payslips')->name('payslips.')->group(function () {
     Route::get('/{payroll}', [PayslipController::class, 'generatePayslip'])->name('generate');
+    Route::get('/{payroll}/preview', [PayslipController::class, 'previewPayslip'])->name('preview');
     Route::get('/{payroll}/download', [PayslipController::class, 'downloadPayslip'])->name('download');
     Route::post('/batch', [PayslipController::class, 'generateBatch'])->name('batch');
 });
