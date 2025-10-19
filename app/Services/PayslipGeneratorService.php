@@ -33,7 +33,7 @@ class PayslipGeneratorService
             $pdf = Pdf::loadView("payslips.{$template}", compact('payroll'));
             $pdf->setPaper('A4', 'portrait');
 
-            $filename = "payslip_{$payroll->employee->employee_id}_{$payroll->period}.pdf";
+            $filename = $this->buildFilename($payroll);
             $path = "payslips/{$filename}";
 
             \Log::info("Attempting to store PDF at: {$path}");
@@ -94,8 +94,10 @@ class PayslipGeneratorService
 
     public function downloadPayslip(Payroll $payroll, bool $force = false)
     {
-        $filename = "payslip_{$payroll->employee->employee_id}_{$payroll->period}.pdf";
+        $filename = $this->buildFilename($payroll);
+        $legacyFilename = $this->buildLegacyFilename($payroll);
         $path = "payslips/{$filename}";
+        $legacyPath = "payslips/{$legacyFilename}";
 
         // Force regeneration if requested
         if ($force) {
@@ -106,48 +108,81 @@ class PayslipGeneratorService
                 \Log::warning("Forced regeneration failed for {$filename}: " . $e->getMessage());
             }
         } else {
-            // Ensure the file exists, if not generate it
-            if (!Storage::disk('local')->exists($path) && !Storage::disk('public')->exists($path)) {
+            // Ensure the file exists: prefer new naming, fallback to legacy naming if present
+            $existsNew = Storage::disk('local')->exists($path) || Storage::disk('public')->exists($path);
+            $existsLegacy = Storage::disk('local')->exists($legacyPath) || Storage::disk('public')->exists($legacyPath);
+
+            if (!$existsNew && !$existsLegacy) {
                 $this->generatePayslip($payroll);
             }
         }
 
-        // Verify file exists after generation
+        // Decide which path to use (new preferred, legacy fallback)
+        $useLegacy = false;
         if (!Storage::disk('local')->exists($path) && !Storage::disk('public')->exists($path)) {
-            throw new \Exception("Failed to generate payslip PDF for {$payroll->employee->name}");
+            if (Storage::disk('local')->exists($legacyPath) || Storage::disk('public')->exists($legacyPath)) {
+                $useLegacy = true;
+            } else {
+                // Verify file exists after generation
+                throw new \Exception("Failed to generate payslip PDF for {$payroll->employee->name}");
+            }
         }
 
         try {
             // Try local disk first
-            if (Storage::disk('local')->exists($path)) {
+            if (!$useLegacy && Storage::disk('local')->exists($path)) {
                 return Storage::disk('local')->download($path, $filename);
+            }
+            if ($useLegacy && Storage::disk('local')->exists($legacyPath)) {
+                return Storage::disk('local')->download($legacyPath, $legacyFilename);
             }
 
             // Try public disk if local doesn't have the file
-            if (Storage::disk('public')->exists($path)) {
+            if (!$useLegacy && Storage::disk('public')->exists($path)) {
                 return Storage::disk('public')->download($path, $filename);
+            }
+            if ($useLegacy && Storage::disk('public')->exists($legacyPath)) {
+                return Storage::disk('public')->download($legacyPath, $legacyFilename);
             }
 
             throw new \Exception("File not found on any disk");
         } catch (\Exception $e) {
             // Log the original error for debugging
-            \Log::warning("Storage download failed for {$filename}: " . $e->getMessage());
+            \Log::warning("Storage download failed for " . ($useLegacy ? $legacyFilename : $filename) . ": " . $e->getMessage());
 
             // If that fails, try a direct file response
-            $fullPath = Storage::disk('local')->path($path);
+            $fullPath = Storage::disk('local')->path($useLegacy ? $legacyPath : $path);
             if (!file_exists($fullPath)) {
-                $fullPath = Storage::disk('public')->path($path);
+                $fullPath = Storage::disk('public')->path($useLegacy ? $legacyPath : $path);
             }
 
             if (!file_exists($fullPath)) {
                 throw new \Exception("Payslip file not found at: {$fullPath}");
             }
 
-            \Log::info("Using direct file download for {$filename} from {$fullPath}");
+            \Log::info("Using direct file download for " . ($useLegacy ? $legacyFilename : $filename) . " from {$fullPath}");
 
             return response()->download($fullPath, $filename, [
                 'Content-Type' => 'application/pdf',
             ]);
         }
+    }
+
+    private function buildFilename(Payroll $payroll): string
+    {
+        $employeeId = $payroll->employee->employee_id;
+        $employeeName = $payroll->employee->name;
+        $period = $payroll->period;
+
+        // Strip characters unsafe for filenames across platforms
+        $safeEmployeeName = preg_replace('/[\\\\\/\:\*\?\"\<\>\|]+/', '', $employeeName);
+        $safePeriod = preg_replace('/[\\\\\/\:\*\?\"\<\>\|]+/', '', $period);
+
+        return "payslip_{$employeeId}_{$safeEmployeeName}_{$safePeriod}.pdf";
+    }
+
+    private function buildLegacyFilename(Payroll $payroll): string
+    {
+        return "payslip_{$payroll->employee->employee_id}_{$payroll->period}.pdf";
     }
 }
