@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Payroll;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class PayslipGeneratorService
 {
@@ -134,7 +135,8 @@ class PayslipGeneratorService
                 return Storage::disk('local')->download($path, $filename);
             }
             if ($useLegacy && Storage::disk('local')->exists($legacyPath)) {
-                return Storage::disk('local')->download($legacyPath, $legacyFilename);
+                // Serve legacy path but with new desired download name
+                return Storage::disk('local')->download($legacyPath, $filename);
             }
 
             // Try public disk if local doesn't have the file
@@ -142,7 +144,8 @@ class PayslipGeneratorService
                 return Storage::disk('public')->download($path, $filename);
             }
             if ($useLegacy && Storage::disk('public')->exists($legacyPath)) {
-                return Storage::disk('public')->download($legacyPath, $legacyFilename);
+                // Serve legacy path but with new desired download name
+                return Storage::disk('public')->download($legacyPath, $filename);
             }
 
             throw new \Exception("File not found on any disk");
@@ -174,9 +177,9 @@ class PayslipGeneratorService
         $employeeName = $payroll->employee->name;
         $period = $payroll->period;
 
-        // Strip characters unsafe for filenames across platforms
-        $safeEmployeeName = preg_replace('/[\\\\\/\:\*\?\"\<\>\|]+/', '', $employeeName);
-        $safePeriod = preg_replace('/[\\\\\/\:\*\?\"\<\>\|]+/', '', $period);
+        // Create cross-platform safe segments
+        $safeEmployeeName = Str::slug($employeeName, '_');
+        $safePeriod = Str::slug($period, '_');
 
         return "payslip_{$employeeId}_{$safeEmployeeName}_{$safePeriod}.pdf";
     }
