@@ -47,10 +47,10 @@
         }
 
         .payslip-title {
-            font-size: 36px;
+            font-size: 24px;
             font-weight: bold;
             color: black;
-            margin: 10px 0;
+            margin: 3px 0;
             text-align: center;
         }
 
@@ -65,7 +65,7 @@
 
         /* Employee Information */
         .employee-details {
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
         .employee-details div {
@@ -283,9 +283,15 @@
                     <td class="amount-cell">{{ number_format($payroll->bonus, 2) }}</td>
                 </tr>
                 @endif
+                @if($payroll->extra_month > 0)
+                <tr>
+                    <td>13th Month Pay</td>
+                    <td class="amount-cell">{{ number_format($payroll->extra_month, 2) }}</td>
+                </tr>
+                @endif
                 <tr style="background-color: #f8f9fa; font-weight: bold;">
                     <td>Total Earnings</td>
-                    <td class="amount-cell">{{ number_format($payroll->basic_salary + $payroll->allowances + $payroll->overtime + $payroll->bonus, 2) }}</td>
+                    <td class="amount-cell">{{ number_format($payroll->basic_salary + $payroll->allowances + $payroll->overtime + $payroll->bonus + $payroll->extra_month, 2) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -335,6 +341,16 @@
                     <td class="amount-cell">
                         @if($payroll->withholding_tax > 0)
                         {{ number_format($payroll->withholding_tax, 2) }}
+                        @else
+                        <span class="empty-value">0.00</span>
+                        @endif
+                    </td>
+                </tr>
+                <tr>
+                    <td>Loans</td>
+                    <td class="amount-cell">
+                        @if($payroll->loans > 0)
+                        {{ number_format($payroll->loans, 2) }}
                         @else
                         <span class="empty-value">0.00</span>
                         @endif

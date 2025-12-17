@@ -29,6 +29,7 @@ class Payroll extends Model
         'unpaid_absences_tardiness',
         'others_authorized_deductions',
         'total_deductions',
+        'extra_month',
     ];
 
     protected $casts = [
@@ -50,6 +51,7 @@ class Payroll extends Model
         'unpaid_absences_tardiness' => 'decimal:2',
         'others_authorized_deductions' => 'decimal:2',
         'total_deductions' => 'decimal:2',
+        'extra_month' => 'decimal:2',
     ];
 
     public function employee(): BelongsTo

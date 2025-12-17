@@ -48,6 +48,7 @@ class PayrollImport implements ToModel, WithHeadingRow
         $allowances = (float) $this->cleanNumber($row['allowances'] ?? $row['Allowances'] ?? 0);
         $overtime = (float) $this->cleanNumber($row['overtime'] ?? $row[' Overtime '] ?? $row['Overtime'] ?? 0);
         $bonus = (float) $this->cleanNumber($row['holiday'] ?? $row['Holiday'] ?? $row['bonus'] ?? $row['Bonus'] ?? $row['Holiday Premium'] ?? $row[' Holiday '] ?? 0);
+        $extraMonth = (float) $this->cleanNumber($row['13th_month'] ?? $row['13th_Month'] ?? $row['13th Month'] ?? $row['extra_month'] ?? $row['Extra_Month'] ?? 0);
 
         // Handle different deduction column names - updated to match CSV exactly (with lowercase from WithHeadingRow)
         $socialSecurity = (float) $this->cleanNumber($row['social_security_system'] ?? $row['Social_Security_System'] ?? $row['Social Security System'] ?? 0);
@@ -67,7 +68,7 @@ class PayrollImport implements ToModel, WithHeadingRow
         }
 
         // If we have a calculated net pay, use it; otherwise calculate it
-        $netPay = $this->cleanNumber($row[' Net_Pay '] ?? $row['Net_Pay'] ?? $row['Net Pay'] ?? ($basicSalary + $allowances + $overtime + $bonus - $deductions));
+        $netPay = $this->cleanNumber($row[' Net_Pay '] ?? $row['Net_Pay'] ?? $row['Net Pay'] ?? ($basicSalary + $allowances + $overtime + $bonus + $extraMonth - $deductions));
 
         return new Payroll([
             'employee_id' => $employee->id,
@@ -76,13 +77,14 @@ class PayrollImport implements ToModel, WithHeadingRow
             'allowances' => $allowances,
             'overtime' => $overtime,
             'bonus' => $bonus,
+            'extra_month' => $extraMonth,
             'deductions' => $deductions,
             'tax' => $tax,
             'net_pay' => (float) $netPay,
             'pay_date' => $this->parseDate($payDate),
             'status' => 'pending',
             // New detailed fields from CSV
-            'total_earnings' => (float) $this->cleanNumber($row['total_earnings'] ?? $row['Total_Earnings'] ?? $row['Total Earnings'] ?? 0),
+            'total_earnings' => (float) $this->cleanNumber($row['total_earnings'] ?? $row['Total_Earnings'] ?? $row['Total Earnings'] ?? ($basicSalary + $allowances + $overtime + $bonus + $extraMonth)),
             'social_security_system' => $socialSecurity,
             'philhealth' => $philHealth,
             'pag_ibig' => $pagIbig,

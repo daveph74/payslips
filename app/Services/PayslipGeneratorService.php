@@ -33,6 +33,13 @@ class PayslipGeneratorService
 
             $pdf = Pdf::loadView("payslips.{$template}", compact('payroll'));
             $pdf->setPaper('A4', 'portrait');
+            $pdf->setOption('margin-top', 0);
+            $pdf->setOption('margin-bottom', 0);
+            $pdf->setOption('margin-left', 0);
+            $pdf->setOption('margin-right', 0);
+            $pdf->setOption('enable-local-file-access', true);
+            $pdf->setOption('isHtml5ParserEnabled', true);
+            $pdf->setOption('isRemoteEnabled', true);
 
             $filename = $this->buildFilename($payroll);
             $path = "payslips/{$filename}";
@@ -103,6 +110,7 @@ class PayslipGeneratorService
         // Force regeneration if requested
         if ($force) {
             try {
+                dd($payroll);
                 // Attempt to overwrite by regenerating
                 $this->generatePayslip($payroll);
             } catch (\Exception $e) {
